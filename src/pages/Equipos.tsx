@@ -189,12 +189,18 @@ function CrearEquipoModal({ onClose }: { onClose: () => void }) {
 })
 
   const mutation = useMutation({
-    mutationFn: () => equiposService.crear(form),
-    onSuccess: () => {
-      qc.invalidateQueries({queryKey:['equipos']})
-      onClose()
-    }
-  })
+  mutationFn: () => equiposService.crear(form),
+
+  onSuccess: () => {
+    console.log("Equipo creado")
+    qc.invalidateQueries({queryKey:['equipos']})
+    onClose()
+  },
+
+  onError: (error) => {
+    console.error("ERROR CREANDO EQUIPO", error)
+  }
+})
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
