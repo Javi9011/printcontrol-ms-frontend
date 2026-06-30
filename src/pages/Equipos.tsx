@@ -186,6 +186,8 @@ function CrearEquipoModal({ onClose }: { onClose: () => void }) {
   numero_serie: '',
   ubicacion: '',
   estado: 'ACTIVO',
+  marca: '',
+  modelo: '',
 })
 
   const mutation = useMutation({
@@ -228,6 +230,21 @@ function CrearEquipoModal({ onClose }: { onClose: () => void }) {
             label="Ubicación"
             value={form.ubicacion}
             onChange={e=>setForm({...form,ubicacion:e.target.value})}
+          />
+          <Input
+           label="Marca"
+            value={form.marca || ''}
+            onChange={e =>
+              setForm({...form, marca:e.target.value})
+            }
+          />
+
+          <Input
+            label="Modelo"
+            value={form.modelo || ''}
+            onChange={e =>
+              setForm({...form, modelo:e.target.value})
+            }
           />
 
         </div>
