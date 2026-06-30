@@ -178,11 +178,82 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
     </div>
   )
 }
+function CrearEquipoModal({ onClose }: { onClose: () => void }) {
+  const qc = useQueryClient()
 
+  const [form, setForm] = useState<Partial<Equipo>>({
+  nombre: '',
+  numero_serie: '',
+  ubicacion: '',
+  estado: 'ACTIVO',
+})
+
+  const mutation = useMutation({
+    mutationFn: () => equiposService.crear(form),
+    onSuccess: () => {
+      qc.invalidateQueries({queryKey:['equipos']})
+      onClose()
+    }
+  })
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+      <div className="bg-white rounded-xl p-5 w-full max-w-md">
+
+        <h3 className="font-semibold mb-4">
+          Nuevo equipo
+        </h3>
+
+        <div className="flex flex-col gap-3">
+
+          <Input
+            label="Nombre"
+            value={form.nombre}
+            onChange={e=>setForm({...form,nombre:e.target.value})}
+          />
+
+          <Input
+            label="Número de serie"
+            value={form.numero_serie}
+            onChange={e=>setForm({...form,numero_serie:e.target.value})}
+          />
+
+          <Input
+            label="Ubicación"
+            value={form.ubicacion}
+            onChange={e=>setForm({...form,ubicacion:e.target.value})}
+          />
+
+        </div>
+
+
+        <div className="flex justify-end gap-2 mt-4">
+
+          <Button 
+            variant="secondary"
+            onClick={onClose}
+          >
+            Cancelar
+          </Button>
+
+          <Button
+            variant="primary"
+            onClick={()=>mutation.mutate()}
+          >
+            Guardar
+          </Button>
+
+        </div>
+
+      </div>
+    </div>
+  )
+}
 export default function Equipos() {
   const [search, setSearch] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('')
   const [equipoLectura, setEquipoLectura] = useState<Equipo | null>(null)
+  const [showCreate, setShowCreate] = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ['equipos'],
@@ -200,7 +271,9 @@ export default function Equipos() {
       <SectionHeader
         title="Equipos de impresión"
         action={
-          <Button variant="primary">
+          <Button variant="primary"
+            onClick={() => setShowCreate(true)}
+          >
             <Plus size={14} /> Agregar equipo
           </Button>
         }
@@ -239,6 +312,9 @@ export default function Equipos() {
       {equipoLectura && (
         <LecturaModal equipo={equipoLectura} onClose={() => setEquipoLectura(null)} />
       )}
+      {showCreate && (
+        <CrearEquipoModal onClose={() => setShowCreate(false)} />
+)}
     </div>
   )
 }
