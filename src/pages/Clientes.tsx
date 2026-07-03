@@ -3,9 +3,11 @@ import { useQuery } from '@tanstack/react-query'
 import { Users, Search, Building2, User, Mail, Phone } from 'lucide-react'
 import { clientesService } from '../api'
 import { Card, Badge, Loading, Empty, SectionHeader, Button } from '../components/ui'
+import ClienteModal from '../components/clientes/ClienteModal'
 
 export default function Clientes() {
   const [search, setSearch] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
   const { data, isLoading } = useQuery({ queryKey: ['clientes'], queryFn: clientesService.listar })
 
   const clientes = (data?.results ?? []).filter(c =>
@@ -16,7 +18,7 @@ export default function Clientes() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <SectionHeader title="Clientes" action={<Button variant="primary"><Users size={14} /> Nuevo cliente</Button>} />
+      <SectionHeader title="Clientes" action={<Button variant="primary"onClick={() => setShowCreate(true)}><Users size={14} /> Nuevo cliente</Button>} />
 
       <div className="relative mb-4">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -78,6 +80,11 @@ export default function Clientes() {
           </div>
         )
       }
+      {showCreate && (
+                <ClienteModal
+                  onClose={() => setShowCreate(false)}
+                 />
+      )}
     </div>
   )
 }
