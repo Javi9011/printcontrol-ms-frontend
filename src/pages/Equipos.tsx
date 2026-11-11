@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Printer, Search, ChevronDown, ChevronUp } from 'lucide-react'
-import { equiposService } from '../api'
+import { equiposService, clientesService, contratosService } from '../api'
 import { Card, Badge, Button, Loading, Empty, TonerBar, Input, Select, SectionHeader } from '../components/ui'
 import type { Equipo } from '../types'
 import dayjs from 'dayjs'
@@ -178,100 +178,399 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
     </div>
   )
 }
+
+type CrearEquipoPayload = {
+  nombre: string
+  marca: string
+  modelo: string
+  numero_serie: string
+  tipo: 'MONO' | 'COLOR'
+  estado: 'ACTIVO' | 'INACTIVO' | 'MANTENIMIENTO'
+  cliente_id: number | null
+  contrato_id: number | null
+  ubicacion: string
+  cuota_mensual: number
+  contador_inicial: number
+  fecha_instalacion: string | null
+  notas: string
+}
+
+function obtenerMensajeError(error: unknown): string {
+  const err = error as {
+    response?: { data?: unknown }
+    message?: string
+  }
+
+  const data = err.response?.data
+
+  if (typeof data === 'string') return data
+
+  if (data && typeof data === 'object') {
+    return Object.entries(data as Record<string, unknown>)
+      .map(([campo, mensaje]) => {
+        const detalle = Array.isArray(mensaje)
+          ? mensaje.join(', ')
+          : String(mensaje)
+
+        return `${campo}: ${detalle}`
+      })
+      .join(' · ')
+  }
+
+  return err.message || 'No se pudo crear el equipo.'
+}
+
 function CrearEquipoModal({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient()
 
-  const [form, setForm] = useState<Partial<Equipo>>({
-  nombre: '',
-  numero_serie: '',
-  ubicacion: '',
-  estado: 'ACTIVO',
-  marca: '',
-  modelo: '',
-})
+  const [form, setForm] = useState({
+    nombre: '',
+    marca: '',
+    modelo: '',
+    numero_serie: '',
+    tipo: 'MONO' as 'MONO' | 'COLOR',
+    estado: 'ACTIVO' as 'ACTIVO' | 'INACTIVO' | 'MANTENIMIENTO',
+    cliente_id: '',
+    contrato_id: '',
+    ubicacion: '',
+    cuota_mensual: 5000,
+    contador_inicial: 0,
+    fecha_instalacion: '',
+    notas: '',
+  })
+
+  const [formError, setFormError] = useState('')
+
+  // Cargar clientes
+  const clientesQuery = useQuery({
+    queryKey: ['clientes'],
+    queryFn: clientesService.listar,
+  })
+
+  // Cargar contratos
+  const contratosQuery = useQuery({
+    queryKey: ['contratos'],
+    queryFn: contratosService.listar,
+  })
+
+  // Mostrar solamente los contratos del cliente seleccionado
+  const contratosFiltrados = (contratosQuery.data?.results ?? [])
+    .filter(contrato => contrato.cliente === Number(form.cliente_id))
 
   const mutation = useMutation({
-  mutationFn: () => equiposService.crear(form),
+    mutationFn: (payload: CrearEquipoPayload) =>
+      equiposService.crear(payload),
 
-  onSuccess: () => {
-    console.log("Equipo creado")
-    qc.invalidateQueries({queryKey:['equipos']})
-    onClose()
-  },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['equipos'] })
+      onClose()
+    },
+  })
 
-  onError: (error) => {
-    console.error("ERROR CREANDO EQUIPO", error)
+  const handleSubmit = () => {
+    setFormError('')
+
+    if (
+      !form.nombre.trim() ||
+      !form.marca.trim() ||
+      !form.modelo.trim() ||
+      !form.numero_serie.trim()
+    ) {
+      setFormError('Completa el nombre, marca, modelo y número de serie.')
+      return
+    }
+
+    if (form.cuota_mensual < 1) {
+      setFormError('La cuota mensual debe ser como mínimo 1.')
+      return
+    }
+
+    if (form.contador_inicial < 0) {
+      setFormError('El contador inicial no puede ser negativo.')
+      return
+    }
+
+    const payload: CrearEquipoPayload = {
+      nombre: form.nombre.trim(),
+      marca: form.marca.trim(),
+      modelo: form.modelo.trim(),
+      numero_serie: form.numero_serie.trim(),
+      tipo: form.tipo,
+      estado: form.estado,
+      cliente_id: form.cliente_id ? Number(form.cliente_id) : null,
+      contrato_id: form.contrato_id ? Number(form.contrato_id) : null,
+      ubicacion: form.ubicacion.trim(),
+      cuota_mensual: form.cuota_mensual,
+      contador_inicial: form.contador_inicial,
+      fecha_instalacion: form.fecha_instalacion || null,
+      notas: form.notas.trim(),
+    }
+
+    mutation.mutate(payload)
   }
-})
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl p-5 w-full max-w-md">
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-5">
 
-        <h3 className="font-semibold mb-4">
+        <h3 className="font-semibold text-gray-800 text-lg mb-5">
           Nuevo equipo
         </h3>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-5">
 
-          <Input
-            label="Nombre"
-            value={form.nombre}
-            onChange={e=>setForm({...form,nombre:e.target.value})}
-          />
+          {/* INFORMACIÓN DEL EQUIPO */}
+          <section>
+            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">
+              Información del equipo
+            </h4>
 
-          <Input
-            label="Número de serie"
-            value={form.numero_serie}
-            onChange={e=>setForm({...form,numero_serie:e.target.value})}
-          />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Input
+                label="Nombre *"
+                value={form.nombre}
+                onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
+              />
 
-          <Input
-            label="Ubicación"
-            value={form.ubicacion}
-            onChange={e=>setForm({...form,ubicacion:e.target.value})}
-          />
-          <Input
-           label="Marca"
-            value={form.marca || ''}
-            onChange={e =>
-              setForm({...form, marca:e.target.value})
-            }
-          />
+              <Input
+                label="Número de serie *"
+                value={form.numero_serie}
+                onChange={e => setForm(f => ({ ...f, numero_serie: e.target.value }))}
+              />
 
-          <Input
-            label="Modelo"
-            value={form.modelo || ''}
-            onChange={e =>
-              setForm({...form, modelo:e.target.value})
-            }
-          />
+              <Input
+                label="Marca *"
+                value={form.marca}
+                onChange={e => setForm(f => ({ ...f, marca: e.target.value }))}
+              />
 
+              <Input
+                label="Modelo *"
+                value={form.modelo}
+                onChange={e => setForm(f => ({ ...f, modelo: e.target.value }))}
+              />
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Tipo de equipo
+                </label>
+                <Select
+                  value={form.tipo}
+                  onChange={e => setForm(f => ({
+                    ...f,
+                    tipo: e.target.value as 'MONO' | 'COLOR',
+                  }))}
+                >
+                  <option value="MONO">Monocromático</option>
+                  <option value="COLOR">Color</option>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Estado
+                </label>
+                <Select
+                  value={form.estado}
+                  onChange={e => setForm(f => ({
+                    ...f,
+                    estado: e.target.value as 'ACTIVO' | 'INACTIVO' | 'MANTENIMIENTO',
+                  }))}
+                >
+                  <option value="ACTIVO">Activo</option>
+                  <option value="INACTIVO">Inactivo</option>
+                  <option value="MANTENIMIENTO">En mantenimiento</option>
+                </Select>
+              </div>
+            </div>
+          </section>
+
+          {/* ASIGNACIÓN */}
+          <section className="border-t pt-4">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">
+              Asignación
+            </h4>
+
+            <div className="flex flex-col gap-3">
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Cliente
+                </label>
+
+                <Select
+                  value={form.cliente_id}
+                  onChange={e => setForm(f => ({
+                    ...f,
+                    cliente_id: e.target.value,
+                    contrato_id: '',
+                  }))}
+                >
+                  <option value="">Sin cliente asignado</option>
+
+                  {(clientesQuery.data?.results ?? []).map(cliente => (
+                    <option key={cliente.id} value={cliente.id}>
+                      {cliente.nombre}
+                      {cliente.razon_social &&
+                        cliente.razon_social !== cliente.nombre
+                        ? ` — ${cliente.razon_social}`
+                        : ''}
+                    </option>
+                  ))}
+                </Select>
+
+                {clientesQuery.isLoading && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Cargando clientes...
+                  </p>
+                )}
+
+                {clientesQuery.isError && (
+                  <p className="text-xs text-red-500 mt-1">
+                    No se pudieron cargar los clientes.
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Contrato
+                </label>
+
+                <Select
+                  value={form.contrato_id}
+                  disabled={!form.cliente_id || contratosQuery.isLoading}
+                  onChange={e => setForm(f => ({
+                    ...f,
+                    contrato_id: e.target.value,
+                  }))}
+                >
+                  <option value="">Sin contrato asignado</option>
+
+                  {contratosFiltrados.map(contrato => (
+                    <option key={contrato.id} value={contrato.id}>
+                      {contrato.numero_contrato} — {contrato.estado_display}
+                    </option>
+                  ))}
+                </Select>
+
+                {contratosQuery.isLoading && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Cargando contratos...
+                  </p>
+                )}
+
+                {contratosQuery.isError && (
+                  <p className="text-xs text-red-500 mt-1">
+                    No se pudieron cargar los contratos.
+                  </p>
+                )}
+
+                {form.cliente_id &&
+                  !contratosQuery.isLoading &&
+                  !contratosQuery.isError &&
+                  contratosFiltrados.length === 0 && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Este cliente no tiene contratos registrados.
+                    </p>
+                  )}
+              </div>
+
+              <Input
+                label="Ubicación"
+                value={form.ubicacion}
+                onChange={e => setForm(f => ({ ...f, ubicacion: e.target.value }))}
+              />
+            </div>
+          </section>
+
+          {/* CONFIGURACIÓN */}
+          <section className="border-t pt-4">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">
+              Configuración del servicio
+            </h4>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Input
+                label="Cuota mensual (ciclos)"
+                type="number"
+                value={form.cuota_mensual}
+                onChange={e => setForm(f => ({
+                  ...f,
+                  cuota_mensual: Number(e.target.value),
+                }))}
+              />
+
+              <Input
+                label="Contador inicial"
+                type="number"
+                value={form.contador_inicial}
+                onChange={e => setForm(f => ({
+                  ...f,
+                  contador_inicial: Number(e.target.value),
+                }))}
+              />
+
+              <Input
+                label="Fecha de instalación"
+                type="date"
+                value={form.fecha_instalacion}
+                onChange={e => setForm(f => ({
+                  ...f,
+                  fecha_instalacion: e.target.value,
+                }))}
+              />
+            </div>
+
+            <div className="mt-3">
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Notas
+              </label>
+              <textarea
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={3}
+                value={form.notas}
+                onChange={e => setForm(f => ({
+                  ...f,
+                  notas: e.target.value,
+                }))}
+                placeholder="Observaciones adicionales..."
+              />
+            </div>
+          </section>
         </div>
 
+        {/* ERRORES */}
+        {(formError || mutation.isError) && (
+          <div className="mt-4 p-3 rounded-lg bg-red-50 text-red-700 text-xs">
+            {formError || obtenerMensajeError(mutation.error)}
+          </div>
+        )}
 
-        <div className="flex justify-end gap-2 mt-4">
-
-          <Button 
+        {/* BOTONES */}
+        <div className="flex justify-end gap-2 mt-5 border-t pt-4">
+          <Button
             variant="secondary"
             onClick={onClose}
+            disabled={mutation.isPending}
           >
             Cancelar
           </Button>
 
           <Button
             variant="primary"
-            onClick={()=>mutation.mutate()}
+            onClick={handleSubmit}
+            disabled={mutation.isPending}
           >
-            Guardar
+            {mutation.isPending ? 'Guardando...' : 'Crear equipo'}
           </Button>
-
         </div>
 
       </div>
     </div>
   )
 }
+
 export default function Equipos() {
   const [search, setSearch] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('')
