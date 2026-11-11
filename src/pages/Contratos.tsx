@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileText, Search, Calendar, Printer } from 'lucide-react'
-import { contratosService } from '../api'
+import { contratosService, clientesService } from '../api'
 import { Card, Badge, Loading, Empty, SectionHeader, Button } from '../components/ui'
 import dayjs from 'dayjs'
 
