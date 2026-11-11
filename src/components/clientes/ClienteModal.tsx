@@ -43,7 +43,7 @@ export default function ClienteModal({ onClose }: Props) {
     ciudad: '',
     estado: '',
     codigo_postal: '',
-    pais: 'México',
+    pais: 'Colombia',
     estado_cuenta: 'ACTIVO',
     notas: ''
   })
