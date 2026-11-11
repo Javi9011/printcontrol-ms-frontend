@@ -46,7 +46,14 @@ export default function Contratos() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <SectionHeader title="Contratos" action={<Button variant="primary"><FileText size={14} /> Nuevo contrato</Button>} />
+      <SectionHeader
+  title="Contratos"
+  action={
+    <Button variant="primary" onClick={() => setMostrarModal(true)}>
+      <FileText size={14} /> Nuevo contrato
+    </Button>
+  }
+/>
 
       <div className="flex gap-3 mb-4 flex-wrap">
         <div className="relative flex-1 min-w-48">
