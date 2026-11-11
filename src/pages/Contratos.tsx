@@ -8,7 +8,21 @@ import dayjs from 'dayjs'
 export default function Contratos() {
   const [search, setSearch] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('')
-  const { data, isLoading } = useQuery({ queryKey: ['contratos'], queryFn: contratosService.listar })
+  const [mostrarModal, setMostrarModal] = useState(false)
+
+  const queryClient = useQueryClient()
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['contratos'],
+    queryFn: contratosService.listar,
+  })
+
+  const { data: clientesData, isLoading: cargandoClientes } = useQuery({
+    queryKey: ['clientes'],
+    queryFn: clientesService.listar,
+  })
+
+  const clientes = clientesData?.results ?? []
 
   const contratos = (data?.results ?? []).filter(c =>
     (!search || c.numero_contrato.toLowerCase().includes(search.toLowerCase()) || c.cliente_nombre.toLowerCase().includes(search.toLowerCase())) &&
