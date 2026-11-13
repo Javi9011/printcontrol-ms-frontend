@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { FileText, Search, Calendar, Printer } from 'lucide-react'
 import { contratosService, clientesService } from '../api'
 import { Card, Badge, Loading, Empty, SectionHeader, Button } from '../components/ui'
 import dayjs from 'dayjs'
+import type { Cliente } from '../types'
 
 export default function Contratos() {
   const [search, setSearch] = useState('')
