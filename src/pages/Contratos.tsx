@@ -40,6 +40,13 @@ export default function Contratos() {
   })
 
   const [errorFormulario, setErrorFormulario] = useState('')
+    
+  const actualizarCampo = (campo: string, valor: string | boolean) => {
+    setForm((prev) => ({
+      ...prev,
+      [campo]: valor,
+    }))
+  }
 
   const contratos = (data?.results ?? []).filter(c =>
     (!search || c.numero_contrato.toLowerCase().includes(search.toLowerCase()) || c.cliente_nombre.toLowerCase().includes(search.toLowerCase())) &&
