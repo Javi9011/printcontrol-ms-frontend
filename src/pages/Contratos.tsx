@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { FileText, Search, Calendar, Printer } from 'lucide-react'
 import { contratosService, clientesService } from '../api'
-import { Card, Badge, Loading, Empty, SectionHeader, Button } from '../components/ui'
+import {Card,Badge,Loading,Empty,SectionHeader,Button,Input,Select,Textarea,} from '../components/ui'
 import dayjs from 'dayjs'
 import type { Cliente } from '../types'
 
@@ -47,6 +47,55 @@ export default function Contratos() {
       [campo]: valor,
     }))
   }
+
+  const crearContratoMutation = useMutation({
+    mutationFn: () => contratosService.crear({
+    cliente: Number(form.cliente),
+    numero_contrato: form.numero_contrato,
+    fecha_inicio: form.fecha_inicio,
+    fecha_fin: form.fecha_fin,
+    estado: form.estado as 'ACTIVO' | 'VENCIDO' | 'CANCELADO' | 'RENOVACION',
+    periodo_facturacion: form.periodo_facturacion as 'MENSUAL' | 'TRIMESTRAL' | 'ANUAL',
+    precio_base: form.precio_base,
+    precio_copia_excedente: form.precio_copia_excedente,
+    incluye_mantenimiento: form.incluye_mantenimiento,
+    incluye_toner: form.incluye_toner,
+    referencia_documento: form.referencia_documento,
+    notas: form.notas,
+}),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contratos'] })
+      setMostrarModal(false)
+      setErrorFormulario('')
+      setForm({
+        cliente: '',
+        numero_contrato: '',
+        fecha_inicio: '',
+        fecha_fin: '',
+        estado: 'ACTIVO',
+        periodo_facturacion: 'MENSUAL',
+        precio_base: '0',
+        precio_copia_excedente: '0',
+        incluye_mantenimiento: true,
+        incluye_toner: true,
+        referencia_documento: '',
+        notas: '',
+      })
+    },
+
+    onError: (error: any) => {
+      const datos = error.response?.data
+      setErrorFormulario(
+        typeof datos === 'object'
+          ? Object.entries(datos)
+              .map(([campo, mensaje]) => `${campo}: ${mensaje}`)
+              .join(' | ')
+          : 'No fue posible crear el contrato.'
+      )
+    },
+  })
+  
 
   const contratos = (data?.results ?? []).filter(c =>
     (!search || c.numero_contrato.toLowerCase().includes(search.toLowerCase()) || c.cliente_nombre.toLowerCase().includes(search.toLowerCase())) &&
