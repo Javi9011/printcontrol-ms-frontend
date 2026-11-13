@@ -134,8 +134,28 @@ export default function Contratos() {
               </Card>
             ))}
           </div>
-        )
-      }
+        )}
+
+      {mostrarModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">
+              Nuevo contrato
+            </h2>
+
+            <p className="text-sm text-gray-600 mb-4">
+              El botón funciona correctamente. Aquí construiremos el formulario.
+            </p>
+
+            <Button
+              variant="secondary"
+              onClick={() => setMostrarModal(false)}
+            >
+              Cerrar
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
