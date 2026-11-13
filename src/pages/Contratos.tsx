@@ -24,6 +24,22 @@ export default function Contratos() {
   })
 
   const clientes = clientesData?.results ?? []
+    const [form, setForm] = useState({
+    cliente: '',
+    numero_contrato: '',
+    fecha_inicio: '',
+    fecha_fin: '',
+    estado: 'ACTIVO',
+    periodo_facturacion: 'MENSUAL',
+    precio_base: '0',
+    precio_copia_excedente: '0',
+    incluye_mantenimiento: true,
+    incluye_toner: true,
+    referencia_documento: '',
+    notas: '',
+  })
+
+  const [errorFormulario, setErrorFormulario] = useState('')
 
   const contratos = (data?.results ?? []).filter(c =>
     (!search || c.numero_contrato.toLowerCase().includes(search.toLowerCase()) || c.cliente_nombre.toLowerCase().includes(search.toLowerCase())) &&
