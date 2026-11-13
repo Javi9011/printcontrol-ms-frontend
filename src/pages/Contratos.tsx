@@ -86,13 +86,24 @@ export default function Contratos() {
 
     onError: (error: any) => {
       const datos = error.response?.data
-      setErrorFormulario(
-        typeof datos === 'object'
-          ? Object.entries(datos)
-              .map(([campo, mensaje]) => `${campo}: ${mensaje}`)
-              .join(' | ')
-          : 'No fue posible crear el contrato.'
-      )
+
+      if (datos && typeof datos === 'object') {
+        const mensajes = Object.entries(datos)
+          .map(([campo, mensaje]) =>
+            `${campo}: ${
+              Array.isArray(mensaje)
+                ? mensaje.join(', ')
+                : String(mensaje)
+            }`
+          )
+          .join(' | ')
+
+        setErrorFormulario(
+          mensajes || 'No fue posible crear el contrato.'
+        )
+      } else {
+        setErrorFormulario('No fue posible crear el contrato.')
+      }
     },
   })
   
@@ -210,22 +221,179 @@ export default function Contratos() {
         )}
 
       {mostrarModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">
-              Nuevo contrato
-            </h2>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
 
-            <p className="text-sm text-gray-600 mb-4">
-              El botón funciona correctamente. Aquí construiremos el formulario.
-            </p>
+            <div className="p-6 border-b">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Nuevo contrato
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Registra un contrato asociado a un cliente existente.
+              </p>
+            </div>
 
-            <Button
-              variant="secondary"
-              onClick={() => setMostrarModal(false)}
-            >
-              Cerrar
-            </Button>
+            <div className="p-6 flex flex-col gap-4">
+              {errorFormulario && (
+                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3">
+                  {errorFormulario}
+                </div>
+              )}
+
+              <h3 className="text-sm font-semibold text-gray-700">
+                1. Datos generales
+              </h3>
+
+              <Select
+                label="Cliente *"
+                value={form.cliente}
+                onChange={e => actualizarCampo('cliente', e.target.value)}
+                disabled={cargandoClientes}
+              >
+                <option value="">
+                  {cargandoClientes ? 'Cargando clientes...' : 'Seleccionar cliente'}
+                </option>
+
+                {clientes.map((cliente: Cliente) => (
+                  <option key={cliente.id} value={cliente.id}>
+                    {cliente.nombre}
+                  </option>
+                ))}
+              </Select>
+
+              <Input
+                label="Número de contrato *"
+                placeholder="Ej. PC-2026-001"
+                value={form.numero_contrato}
+                onChange={e => actualizarCampo('numero_contrato', e.target.value)}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <Input
+                  label="Fecha de inicio *"
+                  type="date"
+                  value={form.fecha_inicio}
+                  onChange={e => actualizarCampo('fecha_inicio', e.target.value)}
+                />
+
+                <Input
+                  label="Fecha de finalización *"
+                  type="date"
+                  value={form.fecha_fin}
+                  min={form.fecha_inicio || undefined}
+                  onChange={e => actualizarCampo('fecha_fin', e.target.value)}
+                />
+
+              </div>
+                        
+                <div className="border-t pt-4 mt-2">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4">
+                    2. Condiciones económicas
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label="Precio base *"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.precio_base}
+                      onChange={e => actualizarCampo('precio_base', e.target.value)}
+                    />
+
+                    <Input
+                      label="Precio por copia excedente"
+                      type="number"
+                      min="0"
+                      step="0.0001"
+                      value={form.precio_copia_excedente}
+                      onChange={e => actualizarCampo('precio_copia_excedente', e.target.value)}
+                    />
+
+                    <Select
+                      label="Periodo de facturación *"
+                      value={form.periodo_facturacion}
+                      onChange={e => actualizarCampo('periodo_facturacion', e.target.value)}
+                    >
+                      <option value="MENSUAL">Mensual</option>
+                      <option value="TRIMESTRAL">Trimestral</option>
+                      <option value="ANUAL">Anual</option>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4 mt-2 flex flex-col gap-3">
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    3. Servicios incluidos
+                  </h3>
+
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={form.incluye_mantenimiento}
+                      onChange={e =>
+                        actualizarCampo('incluye_mantenimiento', e.target.checked)
+                      }
+                    />
+                    Incluye mantenimiento
+                  </label>
+
+                  <label className="flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={form.incluye_toner}
+                      onChange={e =>
+                        actualizarCampo('incluye_toner', e.target.checked)
+                      }
+                    />
+                    Incluye tóner
+                  </label>
+                </div>
+                <div className="border-t pt-4 mt-2 flex flex-col gap-4">
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    4. Información adicional
+                  </h3>
+
+                  <Input
+                    label="Referencia del documento"
+                    placeholder="Ej. DOC-PC-2026-001"
+                    value={form.referencia_documento}
+                    onChange={e =>
+                      actualizarCampo('referencia_documento', e.target.value)
+                    }
+                  />
+
+                  <Textarea
+                    label="Notas"
+                    placeholder="Observaciones adicionales sobre el contrato..."
+                    value={form.notas}
+                    onChange={e =>
+                      actualizarCampo('notas', e.target.value)
+                    }
+                  />
+                </div>
+
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button
+                  variant="secondary"
+                  onClick={() => setMostrarModal(false)}
+                >
+                  Cancelar
+                </Button>
+
+                <Button
+                  variant="primary"
+                  onClick={() => crearContratoMutation.mutate()}
+                  disabled={crearContratoMutation.isPending || cargandoClientes}
+                >
+                  {crearContratoMutation.isPending
+                    ? 'Guardando...'
+                    : 'Guardar contrato'}
+                </Button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}
