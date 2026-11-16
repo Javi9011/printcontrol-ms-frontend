@@ -136,7 +136,6 @@ function NuevaOrdenModal({ onClose }: { onClose: () => void }) {
   })
 
   const [busquedaEquipo, setBusquedaEquipo] = useState('')
-  const [equipoSeleccionado, setEquipoSeleccionado] = useState(false)
   const [form, setForm] = useState({
     tipo: 'CORRECTIVO', prioridad: 'MEDIA',
     equipo_id: '', equipo_nombre: '', equipo_serial: '',
@@ -148,9 +147,13 @@ function NuevaOrdenModal({ onClose }: { onClose: () => void }) {
     mutationFn: () => ordenesService.crear({
       ...form,
       equipo_id: Number(form.equipo_id),
-      tecnico: form.tecnico ? Number(form.tecnico) : undefined,
+      tecnico: undefined,
+      tecnico_nombre_manual: form.tecnico,
     } as any),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ordenes'] }); onClose() },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ordenes'] })
+      onClose()
+    },
   })
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
