@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Wrench, Plus, Play, CheckCircle, Calendar, Clock } from 'lucide-react'
-import { ordenesService, programadosService, tecnicosService } from '../api'
+import { ordenesService, programadosService, equiposService } from '../api'
 import { Card, Badge, Loading, Empty, SectionHeader, Button, MetricCard, Input, Select, Textarea } from '../components/ui'
 import type { OrdenTrabajo, MantenimientoProgramado } from '../types'
 import dayjs from 'dayjs'
@@ -130,7 +130,13 @@ function ProgramadoCard({ prog }: { prog: MantenimientoProgramado }) {
 
 function NuevaOrdenModal({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient()
-  const { data: tecnicos } = useQuery({ queryKey: ['tecnicos'], queryFn: tecnicosService.listar })
+  const { data: equipos } = useQuery({
+    queryKey: ['equipos'],
+    queryFn: equiposService.listar,
+  })
+
+  const [busquedaEquipo, setBusquedaEquipo] = useState('')
+  const [equipoSeleccionado, setEquipoSeleccionado] = useState(false)
   const [form, setForm] = useState({
     tipo: 'CORRECTIVO', prioridad: 'MEDIA',
     equipo_id: '', equipo_nombre: '', equipo_serial: '',
@@ -148,6 +154,16 @@ function NuevaOrdenModal({ onClose }: { onClose: () => void }) {
   })
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
+  const equiposFiltrados = (equipos?.results ?? []).filter(equipo => {
+    const termino = busquedaEquipo.toLowerCase().trim()
+
+    return (
+      equipo.nombre.toLowerCase().includes(termino) ||
+      equipo.numero_serie.toLowerCase().includes(termino) ||
+      equipo.marca.toLowerCase().includes(termino) ||
+      equipo.modelo.toLowerCase().includes(termino)
+    )
+  })
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
@@ -167,14 +183,74 @@ function NuevaOrdenModal({ onClose }: { onClose: () => void }) {
             <option value="ALTA">Alta</option>
             <option value="URGENTE">Urgente</option>
           </Select>
-          <Input label="ID del equipo (ms-equipos)" type="number" value={form.equipo_id} onChange={e => set('equipo_id', e.target.value)} />
-          <Input label="Nombre del equipo" value={form.equipo_nombre} onChange={e => set('equipo_nombre', e.target.value)} />
-          <Input label="Número de serie" value={form.equipo_serial} onChange={e => set('equipo_serial', e.target.value)} />
+          <div className="col-span-2 space-y-2">
+            <Input
+              label="Buscar equipo"
+              placeholder="Nombre, serie, marca o modelo..."
+              value={busquedaEquipo}
+              onChange={e => {
+                setBusquedaEquipo(e.target.value)
+                set('equipo_id', '')
+                set('equipo_nombre', '')
+                set('equipo_serial', '')
+              }}
+            />
+
+            {busquedaEquipo.trim() && !form.equipo_id && (
+              <div className="border rounded-lg divide-y max-h-52 overflow-y-auto">
+                {equiposFiltrados.slice(0, 8).map(equipo => (
+                  <button
+                    key={equipo.id}
+                    type="button"
+                    className="w-full text-left p-3 hover:bg-gray-100"
+                    onClick={() => {
+                      set('equipo_id', String(equipo.id))
+                      set('equipo_nombre', equipo.nombre)
+                      set('equipo_serial', equipo.numero_serie)
+                      setBusquedaEquipo(`${equipo.nombre} - ${equipo.numero_serie}`)
+                    }}
+                  >
+                    <p className="font-medium">{equipo.nombre}</p>
+                    <p className="text-sm text-gray-500">
+                      Serie: {equipo.numero_serie} · {equipo.marca} {equipo.modelo}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      ID: {equipo.id}
+                    </p>
+                  </button>
+                ))}
+
+                {equiposFiltrados.length === 0 && (
+                  <p className="p-3 text-sm text-gray-500">
+                    No se encontraron equipos.
+                  </p>
+                )}
+              </div>      
+            )}
+
+            {form.equipo_id && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="font-medium text-green-800">
+                  Equipo seleccionado
+                </p>
+                <p className="text-sm text-green-700">
+                  {form.equipo_nombre} · Serie: {form.equipo_serial}
+                </p>
+                <p className="text-xs text-green-700">
+                  ID: {form.equipo_id}
+                </p>
+              </div>
+            )}
+          </div>
           <Input label="Fecha programada" type="date" value={form.fecha_programada} onChange={e => set('fecha_programada', e.target.value)} />
-          <Select label="Técnico" value={form.tecnico} onChange={e => set('tecnico', e.target.value)} className="col-span-2">
-            <option value="">Sin asignar</option>
-            {(tecnicos?.results ?? []).map(t => <option key={t.id} value={t.id}>{t.nombre} ({t.tipo_display})</option>)}
-          </Select>
+          <div className="col-span-2">
+            <Input
+              label="Técnico responsable"
+              placeholder="Escribe el nombre del técnico"
+              value={form.tecnico}
+              onChange={e => set('tecnico', e.target.value)}
+            />
+          </div>
           <div className="col-span-2">
             <Textarea label="Descripción del trabajo" rows={3} value={form.descripcion} onChange={e => set('descripcion', e.target.value)} />
           </div>
@@ -183,8 +259,15 @@ function NuevaOrdenModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         <div className="flex gap-2 justify-end mt-4">
-          <Button variant="secondary" onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+          <Button variant="secondary" onClick={onClose}>
+            Cancelar
+          </Button>
+
+          <Button
+            variant="primary"
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending || !form.equipo_id}
+          >
             {mutation.isPending ? 'Guardando...' : 'Crear orden'}
           </Button>
         </div>
@@ -215,7 +298,7 @@ export default function Mantenimiento() {
       {/* Métricas */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         <MetricCard label="Pendientes" value={resumen?.ordenes_pendientes ?? '—'} variant={resumen?.ordenes_pendientes ? 'warning' : 'default'} icon={Clock} />
-        <MetricCard label="En proceso" value={resumen?.ordenes_en_proceso ?? '—'} variant="info" icon={Wrench} />
+        <MetricCard label="En proceso" value={resumen?.ordenes_en_proceso ?? '—'} variant="default" icon={Wrench} />
         <MetricCard label="Completadas (mes)" value={resumen?.ordenes_completadas_mes ?? '—'} variant="success" icon={CheckCircle} />
         <MetricCard label="Técnicos activos" value={resumen?.tecnicos_activos ?? '—'} icon={Wrench} />
       </div>
