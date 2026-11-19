@@ -23,9 +23,11 @@ export default function Navbar() {
     <aside className="w-56 min-h-screen bg-gray-900 text-white flex flex-col shrink-0">
       {/* Brand */}
       <div className="flex items-center gap-3 px-5 py-5 border-b border-gray-700">
-        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-          <Printer size={16} />
-        </div>
+        <img
+          src="/logo-printcontrol.png"
+          alt="Logo PrintControl"
+          className="w-10 h-10 object-contain"
+        />
         <span className="font-semibold text-sm">PrintControl</span>
       </div>
 
