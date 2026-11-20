@@ -26,7 +26,7 @@ export default function Navbar() {
         <img
           src="/logo-printcontrol.png"
           alt="Logo PrintControl"
-          className="w-10 h-10 object-contain"
+          className="w-10 h-10 object-contain rounded-lg"
         />
         <span className="font-semibold text-sm">PrintControl</span>
       </div>
