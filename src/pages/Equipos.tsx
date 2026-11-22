@@ -102,18 +102,14 @@ function HistorialLecturas({ equipoId }: { equipoId: number }) {
               {esColor && (
                 <>
                   <th className="text-right pb-2 px-2">Negro K</th>
-                  <th className="text-right pb-2 px-2">Ciclos K</th>
                 </>
               )}
 
               {esColor && (
                 <>
                   <th className="text-right pb-2 px-2">Cian C</th>
-                  <th className="text-right pb-2 px-2">Ciclos C</th>
                   <th className="text-right pb-2 px-2">Magenta M</th>
-                  <th className="text-right pb-2 px-2">Ciclos M</th>
                   <th className="text-right pb-2 px-2">Amarillo Y</th>
-                  <th className="text-right pb-2 px-2">Ciclos Y</th>
                 </>
               )}
 
@@ -147,12 +143,6 @@ function HistorialLecturas({ equipoId }: { equipoId: number }) {
                         ? l.contador_k.toLocaleString()
                         : '—'}
                     </td>
-
-                    <td className="py-2 px-2 text-right text-green-600">
-                      {l.ciclos_k_desde_anterior !== null
-                        ? `+${l.ciclos_k_desde_anterior.toLocaleString()}`
-                        : '—'}
-                    </td>
                   </>
                 )}
 
@@ -161,28 +151,11 @@ function HistorialLecturas({ equipoId }: { equipoId: number }) {
                     <td className="py-2 px-2 text-right font-medium">
                       {l.contador_c !== null ? l.contador_c.toLocaleString() : '—'}
                     </td>
-                    <td className="py-2 px-2 text-right text-green-600">
-                      {l.ciclos_c_desde_anterior !== null
-                        ? `+${l.ciclos_c_desde_anterior.toLocaleString()}`
-                        : '—'}
-                    </td>
-
                     <td className="py-2 px-2 text-right font-medium">
                       {l.contador_m !== null ? l.contador_m.toLocaleString() : '—'}
                     </td>
-                    <td className="py-2 px-2 text-right text-green-600">
-                      {l.ciclos_m_desde_anterior !== null
-                        ? `+${l.ciclos_m_desde_anterior.toLocaleString()}`
-                        : '—'}
-                    </td>
-
                     <td className="py-2 px-2 text-right font-medium">
                       {l.contador_y !== null ? l.contador_y.toLocaleString() : '—'}
-                    </td>
-                    <td className="py-2 px-2 text-right text-green-600">
-                      {l.ciclos_y_desde_anterior !== null
-                        ? `+${l.ciclos_y_desde_anterior.toLocaleString()}`
-                        : '—'}
                     </td>
                   </>
                 )}
@@ -196,7 +169,7 @@ function HistorialLecturas({ equipoId }: { equipoId: number }) {
             {(!data || data.length === 0) && (
               <tr>
                 <td
-                  colSpan={esColor ? 12 : 4}
+                  colSpan={esColor ? 8 : 4}
                   className="py-4 text-center text-gray-400"
                 >
                   No hay lecturas registradas.
