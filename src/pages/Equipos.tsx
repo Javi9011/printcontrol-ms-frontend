@@ -99,8 +99,12 @@ function HistorialLecturas({ equipoId }: { equipoId: number }) {
               <th className="text-left pb-2 pr-3">Fecha</th>
               <th className="text-right pb-2 px-2">Contador general</th>
               <th className="text-right pb-2 px-2">Ciclos mes</th>
-              <th className="text-right pb-2 px-2">Negro K</th>
-              <th className="text-right pb-2 px-2">Ciclos K</th>
+              {esColor && (
+                <>
+                  <th className="text-right pb-2 px-2">Negro K</th>
+                  <th className="text-right pb-2 px-2">Ciclos K</th>
+                </>
+              )}
 
               {esColor && (
                 <>
@@ -136,17 +140,21 @@ function HistorialLecturas({ equipoId }: { equipoId: number }) {
                     : '—'}
                 </td>
 
-                <td className="py-2 px-2 text-right font-medium">
-                  {l.contador_k !== null
-                    ? l.contador_k.toLocaleString()
-                    : '—'}
-                </td>
+                {esColor && (
+  <>
+                    <td className="py-2 px-2 text-right font-medium">
+                      {l.contador_k !== null
+                        ? l.contador_k.toLocaleString()
+                        : '—'}
+                    </td>
 
-                <td className="py-2 px-2 text-right text-green-600">
-                  {l.ciclos_k_desde_anterior !== null
-                    ? `+${l.ciclos_k_desde_anterior.toLocaleString()}`
-                    : '—'}
-                </td>
+                    <td className="py-2 px-2 text-right text-green-600">
+                      {l.ciclos_k_desde_anterior !== null
+                        ? `+${l.ciclos_k_desde_anterior.toLocaleString()}`
+                        : '—'}
+                    </td>
+                  </>
+                )}
 
                 {esColor && (
                   <>
@@ -188,7 +196,7 @@ function HistorialLecturas({ equipoId }: { equipoId: number }) {
             {(!data || data.length === 0) && (
               <tr>
                 <td
-                  colSpan={esColor ? 12 : 6}
+                  colSpan={esColor ? 12 : 4}
                   className="py-4 text-center text-gray-400"
                 >
                   No hay lecturas registradas.
