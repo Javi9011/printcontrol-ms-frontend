@@ -129,11 +129,20 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
     registrado_por: '',
   })
   const [toners, setToners] = useState(
-    equipo.toners.map(t => ({ canal: t.canal, paginas_restantes: t.paginas_restantes }))
+    equipo.toners.map(t => ({
+      canal: t.canal,
+      paginas_restantes: String(t.paginas_restantes)
+    }))
   )
 
   const mutation = useMutation({
-    mutationFn: () => equiposService.registrarLectura(equipo.id, { ...form, toners }),
+    mutationFn: () => equiposService.registrarLectura(equipo.id, {
+      ...form,
+      toners: toners.map(t => ({
+        ...t,
+        paginas_restantes: Number(t.paginas_restantes)
+      }))
+    }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['equipos'] })
       qc.invalidateQueries({ queryKey: ['historial-lecturas', equipo.id] })
@@ -158,7 +167,11 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
                     label={`Tóner ${t.canal === 'K' ? 'Negro' : t.canal === 'C' ? 'Cian' : t.canal === 'M' ? 'Magenta' : 'Amarillo'}`}
                     type="number"
                     value={t.paginas_restantes}
-                    onChange={e => setToners(prev => prev.map((x, j) => j === i ? { ...x, paginas_restantes: Number(e.target.value) } : x))}
+                    onChange={e => setToners(prev =>
+                      prev.map((x, j) =>
+                        j === i ? { ...x, paginas_restantes: e.target.value } : x
+                      )
+                    )}
                   />
                 ))}
               </div>
