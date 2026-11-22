@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Printer, Search, ChevronDown, ChevronUp } from 'lucide-react'
 import { equiposService, clientesService, contratosService } from '../api'
-import { Card, Badge, Button, Loading, Empty, TonerBar, Input, Select, SectionHeader } from '../components/ui'
+import { Card, Badge, Button, Loading, Empty, Input, Select, SectionHeader } from '../components/ui'
 import type { Equipo } from '../types'
 import dayjs from 'dayjs'
 
@@ -14,10 +14,7 @@ function EstadoBadge({ estado }: { estado: string }) {
 
 function EquipoCard({ eq, onLectura }: { eq: Equipo; onLectura: (eq: Equipo) => void }) {
   const [expanded, setExpanded] = useState(false)
-  const worstToner = eq.toners.some(t => t.nivel === 'CRITICO') ? 'danger'
-    : eq.toners.some(t => t.nivel === 'BAJO') ? 'warning' : 'success'
-  const tonerLabel = worstToner === 'danger' ? 'Cambiar tóner' : worstToner === 'warning' ? 'Tóner bajo' : 'Tóner OK'
-
+ 
   return (
     <Card className="p-4">
       <div className="flex items-start gap-3">
@@ -32,7 +29,6 @@ function EquipoCard({ eq, onLectura }: { eq: Equipo; onLectura: (eq: Equipo) => 
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <EstadoBadge estado={eq.estado} />
-              <Badge variant={worstToner}>{tonerLabel}</Badge>
               <Badge variant={eq.tipo === 'COLOR' ? 'info' : 'gray'}>{eq.tipo_display}</Badge>
             </div>
           </div>
@@ -54,15 +50,6 @@ function EquipoCard({ eq, onLectura }: { eq: Equipo; onLectura: (eq: Equipo) => 
               <p className="font-semibold text-gray-800">{eq.cuota_mensual.toLocaleString()}</p>
             </div>
           </div>
-
-          {/* Toner bars */}
-          {eq.toners.length > 0 && (
-            <div className="mt-3 flex flex-col gap-1.5">
-              {eq.toners.map(t => (
-                <TonerBar key={t.canal} {...t} />
-              ))}
-            </div>
-          )}
 
           {/* Actions */}
           <div className="flex items-center gap-2 mt-3">
@@ -232,13 +219,6 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
 
   const [errorValidacion, setErrorValidacion] = useState('')
 
-  const [toners, setToners] = useState(
-    equipo.toners.map(t => ({
-      canal: t.canal,
-      paginas_restantes: String(t.paginas_restantes)
-    }))
-  )
-
   const mutation = useMutation({
     mutationFn: () => equiposService.registrarLectura(equipo.id, {
       fecha: form.fecha,
@@ -251,10 +231,6 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
       } : {}),
       notas: form.notas,
       registrado_por: form.registrado_por,
-      toners: toners.map(t => ({
-        ...t,
-        paginas_restantes: Number(t.paginas_restantes)
-      }))
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['equipos'] })
@@ -362,30 +338,6 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
               </div>
             )}
           </div>
-
-          {toners.length > 0 && (
-            <div className="border-t border-gray-200 pt-3">
-              <p className="text-xs font-medium text-gray-600 mb-2">
-                Páginas restantes por tóner
-              </p>
-
-              <div className="flex flex-col gap-2">
-                {toners.map((t, i) => (
-                  <Input
-                    key={t.canal}
-                    label={`Tóner ${t.canal === 'K' ? 'Negro' : t.canal === 'C' ? 'Cian' : t.canal === 'M' ? 'Magenta' : 'Amarillo'}`}
-                    type="number"
-                    value={t.paginas_restantes}
-                    onChange={e => setToners(prev =>
-                      prev.map((x, j) =>
-                        j === i ? { ...x, paginas_restantes: e.target.value } : x
-                      )
-                    )}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
 
           <Input
             label="Registrado por"
