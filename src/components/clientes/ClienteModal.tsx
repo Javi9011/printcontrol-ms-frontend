@@ -34,7 +34,7 @@ export default function ClienteModal({ onClose }: Props) {
   const [form, setForm] = useState<Partial<Cliente>>({
     tipo_persona: 'MORAL',
     nombre: '',
-    rfc: '',
+    nit: '',
     razon_social: '',
     contacto_nombre: '',
     contacto_email: '',
@@ -62,7 +62,7 @@ export default function ClienteModal({ onClose }: Props) {
     mutationFn: () => {
       const payload = {
         ...form,
-        rfc: form.rfc?.trim() || null,
+        rfc: form.nit?.trim() || null,
         razon_social: form.tipo_persona === 'MORAL'
           ? form.razon_social?.trim() || ''
           : '',
@@ -111,7 +111,7 @@ export default function ClienteModal({ onClose }: Props) {
       return
     }
 
-    if (form.rfc?.trim().length === 0) {
+    if (form.nit?.trim().length === 0) {
       setForm(prev => ({ ...prev, rfc: '' }))
     }
 
@@ -155,9 +155,9 @@ export default function ClienteModal({ onClose }: Props) {
             />
 
             <Input
-              label="RFC (opcional)"
-              value={form.rfc || ''}
-              onChange={e => actualizarCampo('rfc', e.target.value.toUpperCase())}
+              label="NIT (opcional)"
+              value={form.nit || ''}
+              onChange={e => actualizarCampo('nit', e.target.value.toUpperCase())}
             />
 
             {form.tipo_persona === 'MORAL' && (

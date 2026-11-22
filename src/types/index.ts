@@ -72,7 +72,7 @@ export interface Cliente {
   tipo_persona: 'FISICA' | 'MORAL'
   tipo_persona_display: string
   nombre: string
-  rfc: string | null
+  nit: string | null
   razon_social: string
   contacto_nombre: string
   contacto_email: string
@@ -114,7 +114,7 @@ export interface Contrato {
   numero_contrato: string
   cliente: number
   cliente_nombre: string
-  cliente_rfc: string
+  cliente_nit: string
   fecha_inicio: string
   fecha_fin: string
   estado: 'ACTIVO' | 'VENCIDO' | 'CANCELADO' | 'RENOVACION'

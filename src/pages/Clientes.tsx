@@ -12,7 +12,7 @@ export default function Clientes() {
 
   const clientes = (data?.results ?? []).filter(c =>
     !search || c.nombre.toLowerCase().includes(search.toLowerCase()) ||
-    (c.rfc ?? '').toLowerCase().includes(search.toLowerCase()) ||
+    (c.nit ?? '').toLowerCase().includes(search.toLowerCase()) ||
     c.contacto_email.toLowerCase().includes(search.toLowerCase())
   )
 
@@ -24,7 +24,7 @@ export default function Clientes() {
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Buscar por nombre, RFC o email..."
+          placeholder="Buscar por nombre, NIT o email..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -44,7 +44,7 @@ export default function Clientes() {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <p className="font-medium text-sm text-gray-900">{c.nombre}</p>
-                        {c.rfc && <p className="text-xs text-gray-400">RFC: {c.rfc}</p>}
+                        {c.nit && <p className="text-xs text-gray-400">NIT: {c.nit}</p>}
                       </div>
                       <Badge variant={c.estado_cuenta === 'ACTIVO' ? 'success' : c.estado_cuenta === 'SUSPENDIDO' ? 'danger' : 'gray'}>
                         {c.estado_cuenta_display}
