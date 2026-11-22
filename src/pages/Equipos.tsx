@@ -124,7 +124,7 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
   const qc = useQueryClient()
   const [form, setForm] = useState({
     fecha: dayjs().format('YYYY-MM-DD'),
-    contador: equipo.ultima_lectura?.contador ?? 0,
+    contador: String(equipo.ultima_lectura?.contador ?? ''),
     notas: '',
     registrado_por: '',
   })
@@ -138,6 +138,7 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
   const mutation = useMutation({
     mutationFn: () => equiposService.registrarLectura(equipo.id, {
       ...form,
+      contador: Number(form.contador),
       toners: toners.map(t => ({
         ...t,
         paginas_restantes: Number(t.paginas_restantes)
@@ -156,7 +157,7 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
         <h3 className="font-semibold text-gray-800 mb-4">Registrar lectura — {equipo.nombre}</h3>
         <div className="flex flex-col gap-3">
           <Input label="Fecha" type="date" value={form.fecha} onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} />
-          <Input label="Contador (ciclos de motor)" type="number" value={form.contador} onChange={e => setForm(f => ({ ...f, contador: Number(e.target.value) }))} />
+          <Input label="Contador (ciclos de motor)"type="number"value={form.contador} onChange={e => setForm(f => ({ ...f, contador: e.target.value }))}/>
           {toners.length > 0 && (
             <div>
               <p className="text-xs font-medium text-gray-600 mb-2">Páginas restantes por tóner</p>
