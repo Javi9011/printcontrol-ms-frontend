@@ -83,36 +83,131 @@ function EquipoCard({ eq, onLectura }: { eq: Equipo; onLectura: (eq: Equipo) => 
   )
 }
 
+
 function HistorialLecturas({ equipoId }: { equipoId: number }) {
   const { data, isLoading } = useQuery({
     queryKey: ['historial-lecturas', equipoId],
     queryFn: () => equiposService.historialLecturas(equipoId),
   })
+
+  const { data: equipo } = useQuery({
+    queryKey: ['equipo', equipoId],
+    queryFn: () => equiposService.obtener(equipoId),
+  })
+
   if (isLoading) return <Loading text="Cargando historial..." />
+
+  const esColor = equipo?.tipo === 'COLOR'
+
   return (
     <div className="mt-3 border-t pt-3">
-      <p className="text-xs font-medium text-gray-500 mb-2">Historial de lecturas</p>
+      <p className="text-xs font-medium text-gray-500 mb-2">
+        Historial de lecturas
+      </p>
+
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="text-gray-400 border-b">
-              <th className="text-left pb-1">Fecha</th>
-              <th className="text-right pb-1">Contador</th>
-              <th className="text-right pb-1">Ciclos mes</th>
-              <th className="text-left pb-1 pl-3">Nota</th>
+              <th className="text-left pb-2 pr-3">Fecha</th>
+              <th className="text-right pb-2 px-2">Contador general</th>
+              <th className="text-right pb-2 px-2">Ciclos mes</th>
+              <th className="text-right pb-2 px-2">Negro K</th>
+              <th className="text-right pb-2 px-2">Ciclos K</th>
+
+              {esColor && (
+                <>
+                  <th className="text-right pb-2 px-2">Cian C</th>
+                  <th className="text-right pb-2 px-2">Ciclos C</th>
+                  <th className="text-right pb-2 px-2">Magenta M</th>
+                  <th className="text-right pb-2 px-2">Ciclos M</th>
+                  <th className="text-right pb-2 px-2">Amarillo Y</th>
+                  <th className="text-right pb-2 px-2">Ciclos Y</th>
+                </>
+              )}
+
+              <th className="text-left pb-2 pl-3">Nota</th>
             </tr>
           </thead>
+
           <tbody>
             {data?.map(l => (
               <tr key={l.id} className="border-b border-gray-50">
-                <td className="py-1 text-gray-600">{dayjs(l.fecha).format('DD/MM/YYYY')}</td>
-                <td className="py-1 text-right font-medium">{l.contador.toLocaleString()}</td>
-                <td className={`py-1 text-right ${l.excede_cuota ? 'text-red-600 font-medium' : 'text-green-600'}`}>
-                  {l.ciclos_desde_anterior !== null ? `+${l.ciclos_desde_anterior.toLocaleString()}` : '—'}
+                <td className="py-2 pr-3 text-gray-600 whitespace-nowrap">
+                  {dayjs(l.fecha).format('DD/MM/YYYY')}
                 </td>
-                <td className="py-1 pl-3 text-gray-400">{l.notas || '—'}</td>
+
+                <td className="py-2 px-2 text-right font-medium">
+                  {l.contador.toLocaleString()}
+                </td>
+
+                <td className={`py-2 px-2 text-right ${
+                  l.excede_cuota ? 'text-red-600 font-medium' : 'text-green-600'
+                }`}>
+                  {l.ciclos_desde_anterior !== null
+                    ? `+${l.ciclos_desde_anterior.toLocaleString()}`
+                    : '—'}
+                </td>
+
+                <td className="py-2 px-2 text-right font-medium">
+                  {l.contador_k !== null
+                    ? l.contador_k.toLocaleString()
+                    : '—'}
+                </td>
+
+                <td className="py-2 px-2 text-right text-green-600">
+                  {l.ciclos_k_desde_anterior !== null
+                    ? `+${l.ciclos_k_desde_anterior.toLocaleString()}`
+                    : '—'}
+                </td>
+
+                {esColor && (
+                  <>
+                    <td className="py-2 px-2 text-right font-medium">
+                      {l.contador_c !== null ? l.contador_c.toLocaleString() : '—'}
+                    </td>
+                    <td className="py-2 px-2 text-right text-green-600">
+                      {l.ciclos_c_desde_anterior !== null
+                        ? `+${l.ciclos_c_desde_anterior.toLocaleString()}`
+                        : '—'}
+                    </td>
+
+                    <td className="py-2 px-2 text-right font-medium">
+                      {l.contador_m !== null ? l.contador_m.toLocaleString() : '—'}
+                    </td>
+                    <td className="py-2 px-2 text-right text-green-600">
+                      {l.ciclos_m_desde_anterior !== null
+                        ? `+${l.ciclos_m_desde_anterior.toLocaleString()}`
+                        : '—'}
+                    </td>
+
+                    <td className="py-2 px-2 text-right font-medium">
+                      {l.contador_y !== null ? l.contador_y.toLocaleString() : '—'}
+                    </td>
+                    <td className="py-2 px-2 text-right text-green-600">
+                      {l.ciclos_y_desde_anterior !== null
+                        ? `+${l.ciclos_y_desde_anterior.toLocaleString()}`
+                        : '—'}
+                    </td>
+                  </>
+                )}
+
+                <td className="py-2 pl-3 text-gray-400">
+                  {l.notas || '—'}
+                </td>
               </tr>
             ))}
+
+            {(!data || data.length === 0) && (
+              <tr>
+                <td
+                  colSpan={esColor ? 12 : 6}
+                  className="py-4 text-center text-gray-400"
+                >
+                  No hay lecturas registradas.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -120,14 +215,23 @@ function HistorialLecturas({ equipoId }: { equipoId: number }) {
   )
 }
 
+
 function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void }) {
   const qc = useQueryClient()
+
   const [form, setForm] = useState({
     fecha: dayjs().format('YYYY-MM-DD'),
     contador: String(equipo.ultima_lectura?.contador ?? ''),
+    contador_k: String(equipo.ultima_lectura?.contador_k ?? ''),
+    contador_c: String(equipo.ultima_lectura?.contador_c ?? ''),
+    contador_m: String(equipo.ultima_lectura?.contador_m ?? ''),
+    contador_y: String(equipo.ultima_lectura?.contador_y ?? ''),
     notas: '',
     registrado_por: '',
   })
+
+  const [errorValidacion, setErrorValidacion] = useState('')
+
   const [toners, setToners] = useState(
     equipo.toners.map(t => ({
       canal: t.canal,
@@ -137,8 +241,16 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
 
   const mutation = useMutation({
     mutationFn: () => equiposService.registrarLectura(equipo.id, {
-      ...form,
+      fecha: form.fecha,
       contador: Number(form.contador),
+      contador_k: Number(form.contador_k),
+      ...(equipo.tipo === 'COLOR' ? {
+        contador_c: Number(form.contador_c),
+        contador_m: Number(form.contador_m),
+        contador_y: Number(form.contador_y),
+      } : {}),
+      notas: form.notas,
+      registrado_por: form.registrado_por,
       toners: toners.map(t => ({
         ...t,
         paginas_restantes: Number(t.paginas_restantes)
@@ -151,16 +263,112 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
     },
   })
 
+  const guardarLectura = () => {
+    setErrorValidacion('')
+
+    if (form.contador.trim() === '' || form.contador_k.trim() === '') {
+      setErrorValidacion('Debes ingresar el contador general y el contador negro.')
+      return
+    }
+
+    if (
+      equipo.tipo === 'COLOR' &&
+      (
+        form.contador_c.trim() === '' ||
+        form.contador_m.trim() === '' ||
+        form.contador_y.trim() === ''
+      )
+    ) {
+      setErrorValidacion('Debes ingresar los contadores de Cian, Magenta y Amarillo.')
+      return
+    }
+
+    if (
+      Number(form.contador) < 0 ||
+      Number(form.contador_k) < 0 ||
+      (equipo.tipo === 'COLOR' && (
+        Number(form.contador_c) < 0 ||
+        Number(form.contador_m) < 0 ||
+        Number(form.contador_y) < 0
+      ))
+    ) {
+      setErrorValidacion('Los contadores no pueden ser negativos.')
+      return
+    }
+
+    mutation.mutate()
+  }
+
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-5">
-        <h3 className="font-semibold text-gray-800 mb-4">Registrar lectura — {equipo.nombre}</h3>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto p-5">
+        <h3 className="font-semibold text-gray-800 mb-1">
+          Registrar lectura — {equipo.nombre}
+        </h3>
+
+        <p className="text-xs text-gray-500 mb-4">
+          Tipo de impresora: {equipo.tipo === 'COLOR' ? 'Color' : 'Monocromática'}
+        </p>
+
         <div className="flex flex-col gap-3">
-          <Input label="Fecha" type="date" value={form.fecha} onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} />
-          <Input label="Contador (ciclos de motor)"type="number"value={form.contador} onChange={e => setForm(f => ({ ...f, contador: e.target.value }))}/>
+          <Input
+            label="Fecha"
+            type="date"
+            value={form.fecha}
+            onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))}
+          />
+
+          <Input
+            label="Contador general (ciclos de motor)"
+            type="number"
+            value={form.contador}
+            onChange={e => setForm(f => ({ ...f, contador: e.target.value }))}
+          />
+
+          <div className="border-t border-gray-200 pt-3">
+            <p className="text-sm font-semibold text-gray-700 mb-2">
+              Contadores acumulados de impresión
+            </p>
+
+            <Input
+              label="Negro (K)"
+              type="number"
+              value={form.contador_k}
+              onChange={e => setForm(f => ({ ...f, contador_k: e.target.value }))}
+            />
+
+            {equipo.tipo === 'COLOR' && (
+              <div className="flex flex-col gap-3 mt-3">
+                <Input
+                  label="Cian (C)"
+                  type="number"
+                  value={form.contador_c}
+                  onChange={e => setForm(f => ({ ...f, contador_c: e.target.value }))}
+                />
+
+                <Input
+                  label="Magenta (M)"
+                  type="number"
+                  value={form.contador_m}
+                  onChange={e => setForm(f => ({ ...f, contador_m: e.target.value }))}
+                />
+
+                <Input
+                  label="Amarillo (Y)"
+                  type="number"
+                  value={form.contador_y}
+                  onChange={e => setForm(f => ({ ...f, contador_y: e.target.value }))}
+                />
+              </div>
+            )}
+          </div>
+
           {toners.length > 0 && (
-            <div>
-              <p className="text-xs font-medium text-gray-600 mb-2">Páginas restantes por tóner</p>
+            <div className="border-t border-gray-200 pt-3">
+              <p className="text-xs font-medium text-gray-600 mb-2">
+                Páginas restantes por tóner
+              </p>
+
               <div className="flex flex-col gap-2">
                 {toners.map((t, i) => (
                   <Input
@@ -178,20 +386,48 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
               </div>
             </div>
           )}
-          <Input label="Registrado por" value={form.registrado_por} onChange={e => setForm(f => ({ ...f, registrado_por: e.target.value }))} />
-          <Input label="Notas (opcional)" value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))} />
+
+          <Input
+            label="Registrado por"
+            value={form.registrado_por}
+            onChange={e => setForm(f => ({ ...f, registrado_por: e.target.value }))}
+          />
+
+          <Input
+            label="Notas (opcional)"
+            value={form.notas}
+            onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
+          />
         </div>
+
+        {errorValidacion && (
+          <p className="text-xs text-red-500 mt-3">{errorValidacion}</p>
+        )}
+
+        {mutation.isError && (
+          <p className="text-xs text-red-500 mt-2">
+            Error al guardar. Verifica los datos y que los contadores no sean menores a la lectura anterior.
+          </p>
+        )}
+
         <div className="flex gap-2 justify-end mt-4">
-          <Button variant="secondary" onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+          <Button variant="secondary" onClick={onClose}>
+            Cancelar
+          </Button>
+
+          <Button
+            variant="primary"
+            onClick={guardarLectura}
+            disabled={mutation.isPending}
+          >
             {mutation.isPending ? 'Guardando...' : 'Guardar lectura'}
           </Button>
         </div>
-        {mutation.isError && <p className="text-xs text-red-500 mt-2">Error al guardar. Verifica los datos.</p>}
       </div>
     </div>
   )
 }
+
 
 type CrearEquipoPayload = {
   nombre: string

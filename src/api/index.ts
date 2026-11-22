@@ -1,7 +1,7 @@
 import { equiposApi, clientesApi, alertasApi, mantenimientoApi } from './client'
 import type {
-  Equipo, ResumenEquipos, LecturaContador, Toner,
-  Cliente, Contrato, Arrendamiento, ResumenClientes,
+  Equipo, ResumenEquipos, LecturaContador,
+  Cliente, Contrato, ResumenClientes, 
   Alerta, ResumenAlertas,
   Tecnico, OrdenTrabajo, MantenimientoProgramado, ResumenMantenimiento,
   PaginatedResponse,
@@ -20,13 +20,14 @@ export const equiposService = {
   registrarLectura: (id: number, data: {
     fecha: string
     contador: number
+    contador_k: number
+    contador_c?: number | null
+    contador_m?: number | null
+    contador_y?: number | null
     notas?: string
     registrado_por?: string
     toners?: { canal: string; paginas_restantes: number }[]
   }) => equiposApi.post<LecturaContador>(`/equipos/${id}/lecturas/`, data).then(r => r.data),
-  toners: (id: number) => equiposApi.get<Toner[]>(`/equipos/${id}/toners/`).then(r => r.data),
-  cambiarToner: (tonerId: number, data: { fecha: string; notas?: string; realizado_por?: string }) =>
-    equiposApi.post<Toner>(`/toners/${tonerId}/cambiar/`, data).then(r => r.data),
 }
 
 // ─── CLIENTES ─────────────────────────────────────────────────────────────────

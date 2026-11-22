@@ -60,7 +60,7 @@ export default function Dashboard() {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <MetricCard label="Órdenes pendientes" value={resMant?.ordenes_pendientes ?? '—'} variant={resMant?.ordenes_pendientes ? 'warning' : 'default'} icon={Clock} />
-          <MetricCard label="En proceso" value={resMant?.ordenes_en_proceso ?? '—'} variant="info" icon={Wrench} />
+          <MetricCard label="En proceso" value={resMant?.ordenes_en_proceso ?? '—'} variant="default" icon={Wrench} />
           <MetricCard label="Completadas este mes" value={resMant?.ordenes_completadas_mes ?? '—'} variant="success" icon={CheckCircle} />
           <MetricCard label="Programados próximos" value={resMant?.programados_proximos ?? '—'} variant={resMant?.programados_proximos ? 'warning' : 'default'} icon={Clock} />
         </div>

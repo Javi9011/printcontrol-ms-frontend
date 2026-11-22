@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Bell, CheckCircle, EyeOff, RefreshCw, AlertTriangle, Info } from 'lucide-react'
 import { alertasService } from '../api'
-import { Card, Loading, Empty, Button, Badge, SectionHeader, MetricCard } from '../components/ui'
+import { Loading, Button, Badge, SectionHeader, MetricCard } from '../components/ui'
 import type { Alerta } from '../types'
 import dayjs from 'dayjs'
 
@@ -40,10 +40,10 @@ function AlertaCard({ alerta, onResolver, onIgnorar }: {
           </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          <Button size="sm" variant="ghost" onClick={() => onResolver(alerta.id)} title="Resolver">
+          <Button size="sm" variant="ghost" onClick={() => onResolver(alerta.id)}>
             <CheckCircle size={13} />
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => onIgnorar(alerta.id)} title="Ignorar">
+          <Button size="sm" variant="ghost" onClick={() => onIgnorar(alerta.id)}>
             <EyeOff size={13} />
           </Button>
         </div>
