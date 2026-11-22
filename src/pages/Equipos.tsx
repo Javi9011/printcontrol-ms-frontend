@@ -221,13 +221,15 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
 
   const mutation = useMutation({
     mutationFn: () => equiposService.registrarLectura(equipo.id, {
-      fecha: form.fecha,
-      contador: Number(form.contador),
-      contador_k: Number(form.contador_k),
-      ...(equipo.tipo === 'COLOR' ? {
-        contador_c: Number(form.contador_c),
-        contador_m: Number(form.contador_m),
-        contador_y: Number(form.contador_y),
+        fecha: form.fecha,
+        contador: Number(form.contador),
+        contador_k: equipo.tipo === 'COLOR'
+          ? Number(form.contador_k)
+          : Number(equipo.ultima_lectura?.contador_k ?? 0),
+        ...(equipo.tipo === 'COLOR' ? {
+          contador_c: Number(form.contador_c),
+          contador_m: Number(form.contador_m),
+          contador_y: Number(form.contador_y),
       } : {}),
       notas: form.notas,
       registrado_por: form.registrado_por,
@@ -242,11 +244,15 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
   const guardarLectura = () => {
     setErrorValidacion('')
 
-    if (form.contador.trim() === '' || form.contador_k.trim() === '') {
-      setErrorValidacion('Debes ingresar el contador general y el contador negro.')
+    if (form.contador.trim() === '') {
+      setErrorValidacion('Debes ingresar el contador general de ciclos de motor.')
       return
     }
 
+    if (equipo.tipo === 'COLOR' && form.contador_k.trim() === '') {
+      setErrorValidacion('Debes ingresar el contador negro (K).')
+      return
+    }
     if (
       equipo.tipo === 'COLOR' &&
       (
@@ -260,9 +266,9 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
     }
 
     if (
-      Number(form.contador) < 0 ||
-      Number(form.contador_k) < 0 ||
-      (equipo.tipo === 'COLOR' && (
+        Number(form.contador) < 0 ||
+        (equipo.tipo === 'COLOR' && Number(form.contador_k) < 0) ||
+        (equipo.tipo === 'COLOR' && (
         Number(form.contador_c) < 0 ||
         Number(form.contador_m) < 0 ||
         Number(form.contador_y) < 0
@@ -306,12 +312,14 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
               Contadores acumulados de impresión
             </p>
 
-            <Input
-              label="Negro (K)"
-              type="number"
-              value={form.contador_k}
-              onChange={e => setForm(f => ({ ...f, contador_k: e.target.value }))}
-            />
+            {equipo.tipo === 'COLOR' && (
+              <Input
+                label="Negro (K)"
+                type="number"
+                value={form.contador_k}
+                onChange={e => setForm(f => ({ ...f, contador_k: e.target.value }))}
+              />
+            )}
 
             {equipo.tipo === 'COLOR' && (
               <div className="flex flex-col gap-3 mt-3">
