@@ -20,14 +20,13 @@ export const equiposService = {
   registrarLectura: (id: number, data: {
     fecha: string
     contador: number
-    contador_k: number
-    contador_c?: number | null
-    contador_m?: number | null
-    contador_y?: number | null
+    contador_k?: number | null
+    contador_color?: number | null
     notas?: string
     registrado_por?: string
     toners?: { canal: string; paginas_restantes: number }[]
   }) => equiposApi.post<LecturaContador>(`/equipos/${id}/lecturas/`, data).then(r => r.data),
+
 }
 
 // ─── CLIENTES ─────────────────────────────────────────────────────────────────

@@ -94,28 +94,24 @@ function HistorialLecturas({ equipoId }: { equipoId: number }) {
 
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
+          
           <thead>
             <tr className="text-gray-400 border-b">
               <th className="text-left pb-2 pr-3">Fecha</th>
               <th className="text-right pb-2 px-2">Contador general</th>
               <th className="text-right pb-2 px-2">Ciclos mes</th>
-              {esColor && (
-                <>
-                  <th className="text-right pb-2 px-2">Negro K</th>
-                </>
-              )}
 
               {esColor && (
                 <>
-                  <th className="text-right pb-2 px-2">Cian C</th>
-                  <th className="text-right pb-2 px-2">Magenta M</th>
-                  <th className="text-right pb-2 px-2">Amarillo Y</th>
+                  <th className="text-right pb-2 px-2">Negro K</th>
+                  <th className="text-right pb-2 px-2">Color</th>
                 </>
               )}
 
               <th className="text-left pb-2 pl-3">Nota</th>
             </tr>
           </thead>
+
 
           <tbody>
             {data?.map(l => (
@@ -149,13 +145,7 @@ function HistorialLecturas({ equipoId }: { equipoId: number }) {
                 {esColor && (
                   <>
                     <td className="py-2 px-2 text-right font-medium">
-                      {l.contador_c !== null ? l.contador_c.toLocaleString() : '—'}
-                    </td>
-                    <td className="py-2 px-2 text-right font-medium">
-                      {l.contador_m !== null ? l.contador_m.toLocaleString() : '—'}
-                    </td>
-                    <td className="py-2 px-2 text-right font-medium">
-                      {l.contador_y !== null ? l.contador_y.toLocaleString() : '—'}
+                      {l.contador_color !== null ? l.contador_color.toLocaleString() : '—'}
                     </td>
                   </>
                 )}
@@ -184,6 +174,7 @@ function HistorialLecturas({ equipoId }: { equipoId: number }) {
 }
 
 
+
 function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void }) {
   const qc = useQueryClient()
 
@@ -191,9 +182,7 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
     fecha: dayjs().format('YYYY-MM-DD'),
     contador: String(equipo.ultima_lectura?.contador ?? ''),
     contador_k: String(equipo.ultima_lectura?.contador_k ?? ''),
-    contador_c: String(equipo.ultima_lectura?.contador_c ?? ''),
-    contador_m: String(equipo.ultima_lectura?.contador_m ?? ''),
-    contador_y: String(equipo.ultima_lectura?.contador_y ?? ''),
+    contador_color: String(equipo.ultima_lectura?.contador_color ?? ''),
     notas: '',
     registrado_por: '',
   })
@@ -202,15 +191,11 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
 
   const mutation = useMutation({
     mutationFn: () => equiposService.registrarLectura(equipo.id, {
-        fecha: form.fecha,
-        contador: Number(form.contador),
-        contador_k: equipo.tipo === 'COLOR'
-          ? Number(form.contador_k)
-          : Number(equipo.ultima_lectura?.contador_k ?? 0),
-        ...(equipo.tipo === 'COLOR' ? {
-          contador_c: Number(form.contador_c),
-          contador_m: Number(form.contador_m),
-          contador_y: Number(form.contador_y),
+      fecha: form.fecha,
+      contador: Number(form.contador),
+      ...(equipo.tipo === 'COLOR' ? {
+        contador_k: Number(form.contador_k),
+        contador_color: Number(form.contador_color),
       } : {}),
       notas: form.notas,
       registrado_por: form.registrado_por,
@@ -234,26 +219,21 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
       setErrorValidacion('Debes ingresar el contador negro (K).')
       return
     }
-    if (
-      equipo.tipo === 'COLOR' &&
-      (
-        form.contador_c.trim() === '' ||
-        form.contador_m.trim() === '' ||
-        form.contador_y.trim() === ''
-      )
-    ) {
-      setErrorValidacion('Debes ingresar los contadores de Cian, Magenta y Amarillo.')
+
+    if (equipo.tipo === 'COLOR' && form.contador_color.trim() === '') {
+      setErrorValidacion('Debes ingresar el contador de color.')
       return
     }
 
     if (
-        Number(form.contador) < 0 ||
-        (equipo.tipo === 'COLOR' && Number(form.contador_k) < 0) ||
-        (equipo.tipo === 'COLOR' && (
-        Number(form.contador_c) < 0 ||
-        Number(form.contador_m) < 0 ||
-        Number(form.contador_y) < 0
-      ))
+      Number(form.contador) < 0 ||
+      (
+        equipo.tipo === 'COLOR' &&
+        (
+          Number(form.contador_k) < 0 ||
+          Number(form.contador_color) < 0
+        )
+      )
     ) {
       setErrorValidacion('Los contadores no pueden ser negativos.')
       return
@@ -288,45 +268,29 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
             onChange={e => setForm(f => ({ ...f, contador: e.target.value }))}
           />
 
-          <div className="border-t border-gray-200 pt-3">
-            <p className="text-sm font-semibold text-gray-700 mb-2">
-              Contadores acumulados de impresión
-            </p>
+          {equipo.tipo === 'COLOR' && (
+            <div className="border-t border-gray-200 pt-3">
+              <p className="text-sm font-semibold text-gray-700 mb-2">
+                Contadores acumulados de impresión
+              </p>
 
-            {equipo.tipo === 'COLOR' && (
-              <Input
-                label="Negro (K)"
-                type="number"
-                value={form.contador_k}
-                onChange={e => setForm(f => ({ ...f, contador_k: e.target.value }))}
-              />
-            )}
-
-            {equipo.tipo === 'COLOR' && (
-              <div className="flex flex-col gap-3 mt-3">
+              <div className="flex flex-col gap-3">
                 <Input
-                  label="Cian (C)"
+                  label="Negro (K)"
                   type="number"
-                  value={form.contador_c}
-                  onChange={e => setForm(f => ({ ...f, contador_c: e.target.value }))}
+                  value={form.contador_k}
+                  onChange={e => setForm(f => ({ ...f, contador_k: e.target.value }))}
                 />
 
                 <Input
-                  label="Magenta (M)"
+                  label="Color"
                   type="number"
-                  value={form.contador_m}
-                  onChange={e => setForm(f => ({ ...f, contador_m: e.target.value }))}
-                />
-
-                <Input
-                  label="Amarillo (Y)"
-                  type="number"
-                  value={form.contador_y}
-                  onChange={e => setForm(f => ({ ...f, contador_y: e.target.value }))}
+                  value={form.contador_color}
+                  onChange={e => setForm(f => ({ ...f, contador_color: e.target.value }))}
                 />
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <Input
             label="Registrado por"
@@ -368,6 +332,7 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
     </div>
   )
 }
+
 
 
 type CrearEquipoPayload = {

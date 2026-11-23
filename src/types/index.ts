@@ -14,30 +14,28 @@ export interface Toner {
 }
 
 
+
 export interface LecturaContador {
   id: number
   equipo: number
   fecha: string
   contador: number
 
-  // Contadores acumulados por color
+  // Contadores acumulados de impresión
   contador_k: number | null
-  contador_c: number | null
-  contador_m: number | null
-  contador_y: number | null
+  contador_color: number | null
 
   // Ciclos consumidos desde la lectura anterior
   ciclos_desde_anterior: number | null
   ciclos_k_desde_anterior: number | null
-  ciclos_c_desde_anterior: number | null
-  ciclos_m_desde_anterior: number | null
-  ciclos_y_desde_anterior: number | null
+  ciclos_color_desde_anterior: number | null
 
   excede_cuota: boolean
   notas: string
   registrado_por: string
   creado_en: string
 }
+
 
 
 export interface Equipo {
