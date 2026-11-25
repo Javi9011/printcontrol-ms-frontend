@@ -5,6 +5,7 @@ import { contratosService, clientesService } from '../api'
 import {Card,Badge,Loading,Empty,SectionHeader,Button,Input,Select,Textarea,} from '../components/ui'
 import dayjs from 'dayjs'
 import type { Cliente } from '../types'
+import { useNotification } from '../context/NotificationContext'
 
 export default function Contratos() {
   const [search, setSearch] = useState('')
@@ -12,6 +13,7 @@ export default function Contratos() {
   const [mostrarModal, setMostrarModal] = useState(false)
 
   const queryClient = useQueryClient()
+  const { notifySuccess, notifyError } = useNotification()
 
   const { data, isLoading } = useQuery({
     queryKey: ['contratos'],
@@ -66,6 +68,9 @@ export default function Contratos() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contratos'] })
+
+      notifySuccess('Contrato creado correctamente.')
+
       setMostrarModal(false)
       setErrorFormulario('')
       setForm({
@@ -86,24 +91,22 @@ export default function Contratos() {
 
     onError: (error: any) => {
       const datos = error.response?.data
+      let mensaje = 'No fue posible crear el contrato.'
 
       if (datos && typeof datos === 'object') {
-        const mensajes = Object.entries(datos)
-          .map(([campo, mensaje]) =>
+        mensaje = Object.entries(datos)
+          .map(([campo, valor]) =>
             `${campo}: ${
-              Array.isArray(mensaje)
-                ? mensaje.join(', ')
-                : String(mensaje)
+              Array.isArray(valor)
+                ? valor.join(', ')
+                : String(valor)
             }`
           )
-          .join(' | ')
-
-        setErrorFormulario(
-          mensajes || 'No fue posible crear el contrato.'
-        )
-      } else {
-        setErrorFormulario('No fue posible crear el contrato.')
+          .join(' | ') || mensaje
       }
+
+      setErrorFormulario(mensaje)
+      notifyError(`Error al crear el contrato: ${mensaje}`)
     },
   })
   

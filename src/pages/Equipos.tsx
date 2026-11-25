@@ -5,6 +5,7 @@ import { equiposService, clientesService, contratosService } from '../api'
 import { Card, Badge, Button, Loading, Empty, Input, Select, SectionHeader } from '../components/ui'
 import type { Equipo } from '../types'
 import dayjs from 'dayjs'
+import { useNotification } from '../context/NotificationContext'
 
 function EstadoBadge({ estado }: { estado: string }) {
   if (estado === 'ACTIVO') return <Badge variant="success">Activo</Badge>
@@ -177,6 +178,7 @@ function HistorialLecturas({ equipoId }: { equipoId: number }) {
 
 function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void }) {
   const qc = useQueryClient()
+  const { notifySuccess, notifyError } = useNotification()
 
   const [form, setForm] = useState({
     fecha: dayjs().format('YYYY-MM-DD'),
@@ -203,7 +205,12 @@ function LecturaModal({ equipo, onClose }: { equipo: Equipo; onClose: () => void
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['equipos'] })
       qc.invalidateQueries({ queryKey: ['historial-lecturas', equipo.id] })
+
+      notifySuccess('Lectura del contador registrada correctamente.')
       onClose()
+    },
+    onError: (error: unknown) => {
+      notifyError(`Error al registrar la lectura: ${obtenerMensajeError(error)}`)
     },
   })
 

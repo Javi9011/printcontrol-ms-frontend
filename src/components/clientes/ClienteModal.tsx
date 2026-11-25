@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { clientesService } from '../../api'
 import { Button, Input, Select } from '../ui'
 import type { Cliente } from '../../types'
+import { useNotification } from '../../context/NotificationContext'
 
 interface Props {
   onClose: () => void
@@ -30,6 +31,7 @@ function obtenerMensajeError(error: any): string {
 
 export default function ClienteModal({ onClose }: Props) {
   const qc = useQueryClient()
+  const { notifySuccess, notifyError } = useNotification()
 
   const [form, setForm] = useState<Partial<Cliente>>({
     tipo_persona: 'MORAL',
@@ -76,11 +78,14 @@ export default function ClienteModal({ onClose }: Props) {
 
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['clientes'] })
+      notifySuccess('Cliente creado correctamente.')
       onClose()
     },
 
     onError: (err: any) => {
-      setErrorMensaje(obtenerMensajeError(err))
+      const mensaje = obtenerMensajeError(err)
+      setErrorMensaje(mensaje)
+      notifyError(`Error al guardar el cliente: ${mensaje}`)
     }
   })
 
