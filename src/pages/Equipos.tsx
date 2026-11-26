@@ -385,6 +385,7 @@ function obtenerMensajeError(error: unknown): string {
 
 function CrearEquipoModal({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient()
+  const { notifySuccess, notifyError } = useNotification()
 
   const [form, setForm] = useState({
     nombre: '',
@@ -426,8 +427,12 @@ function CrearEquipoModal({ onClose }: { onClose: () => void }) {
 
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['equipos'] })
+      notifySuccess('Equipo registrado correctamente.')
       onClose()
     },
+    onError: (error: unknown) => {
+      notifyError(`Error al registrar el equipo: ${obtenerMensajeError(error)}`)
+},
   })
 
   const handleSubmit = () => {
